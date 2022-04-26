@@ -1,6 +1,6 @@
 from FlaskApp1.models import User
 
-def course_list():
+def course_list(user_id):
     classes = list(User.objects.aggregate(*[
                 {
                     '$lookup': {
@@ -37,4 +37,4 @@ def course_list():
                     }
                 }
             ]))
-    return courses
+    return classes

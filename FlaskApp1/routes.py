@@ -106,18 +106,23 @@ def register():
         user = User(user_id=user_id, email=email, first_name=first_name, last_name=last_name)
         user.set_password(password)
         user.save()
-        flash("You are successfully registered!", "success")
-        return redirect(url_for('index'))
+        form = LoginForm()
+        if form.validate_on_submit():
+            user = User.objects(email=email).first()
+        session['user_id'] = user.user_id
+        session['username'] = user.first_name
+        flash("You are successfully registered and logged in!", "success")
+        return redirect("/index")
     return render_template("register.html", title="Register", form=form, register=True)
 
 
 @app.route("/enrolment", methods=["GET", "POST"])
 def enrolment():
-    if not session.get('username'):
-        return redirect(url_for('login'))
     courseID = request.form.get('courseID')
     courseTitle = request.form.get('title')
     user_id = session.get('user_id')
+    if not session.get('username'):
+        return redirect(url_for('login'))
     if courseID:
         if Enrolment.objects(user_id=user_id, courseID=courseID):
             flash(f"Oops! You are already registered in this course {courseTitle}!", "danger")
@@ -125,7 +130,7 @@ def enrolment():
         else:
             Enrolment(user_id=user_id, courseID=courseID).save()
             flash(f"You are enrolled in {courseTitle}!", "success")
-    courses = course_list()
+    classes = course_list(user_id)
     return render_template("enrolment.html", enrolment=True, title="Enrolment", classes=classes)
 
 @app.route("/user")
